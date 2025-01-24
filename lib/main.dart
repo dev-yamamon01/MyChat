@@ -35,8 +35,30 @@ class _MyHomePageState extends State<MyHomePage> {
   String name='';
   String room='';
 
-  void showError(String message){}
-  void enter(){}
+  void showError(String message) {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text(message),
+          );
+        });
+  }
+
+  void enter() {
+    if (room.isEmpty) {
+      showError('部屋名を入力してください');
+      return;
+    }
+    if (name.isEmpty) {
+      showError('あなたの名前を入力してください');
+      return;
+    }
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return ChatPage(name: name, room: room);
+    }));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ListTile(
             title: TextField(
               decoration: InputDecoration(
-                hintText: 'room-1',
+                hintText: '例：room-1',
                 labelText: '部屋名', // ラベルとして表示するテキスト
                 border: OutlineInputBorder(), // 枠線を追加
               ),
@@ -59,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ListTile(
             title: TextField(
                 decoration: InputDecoration(
-                  hintText: 'ヤマモン',
+                  hintText: '例：ヤマモン',
                   labelText: 'あなたの名前', // ラベルとして表示するテキスト
                   border: OutlineInputBorder(), // 枠線を追加
                 ),
