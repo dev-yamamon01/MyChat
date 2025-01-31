@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -127,10 +128,48 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+
+  send(){
+    print("押されました");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title:Text(widget.room)),
+      body: ListView(
+            children: [
+              ListTile(
+                title: Text("test"),
+              )
+              ,Column(
+                children: [
+                  TextField(
+
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      iconColor: Colors.white,
+                    ),
+                    onPressed: send,
+                    icon: SvgPicture.asset('assets/send.svg',
+                      width: 20,
+                      height: 20),
+
+                  label: Text(
+                      '送信',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight:FontWeight.bold,
+                          fontSize: 20
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          )
     );
   }
 }
