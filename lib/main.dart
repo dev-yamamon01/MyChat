@@ -157,113 +157,116 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   //データ更新監視
-  Future<void> watch () async{
-    collection.snapshots().listen((event){
-      if(mounted){
+  Future<void> watch() async {
+    collection.snapshots().listen((event) {
+      if (mounted) {
+        //非同期処理でウィディットが破棄された時にエラーが発生することがあるので、stateオブジェクトが存在するかどうかで分岐させる
         setState(() {
-            items=event.docs.reversed.map(
-            (docment)=>
-            Item.fromSnapshot(
-            docment.id,
-            docment.data(),
-            ),
-            )
-  .toList(growable: false);
+          items = event.docs.reversed
+              .map(
+                (docment) => Item.fromSnapshot(
+                  docment.id,
+                  docment.data(),
+                ),
+              )
+              .toList(growable: false);
         });
-
-  }
-  }
-      );
+      }
+    });
   }
 
   //保存する
   Future<void> save() async{
     final now=DateTime.now();
-    await collection.doc(now.microsecondsSinceEpoch.toString()).set(
+    await collection.doc(now.microsecondsSinceEpoch.toString()).set(//awaitで完了するまで待ち続ける
 {
-  "data":Timestamp.fromDate(now),
-  "name":widget.name,
-  "text":textEditingController.text,
+  "date":Timestamp.fromDate(now),
+  "name":widget.name,//ログインしているユーザーの名前
+  "text":textEditingController.text,//ユーザーの入力内容
 });
     textEditingController.text='';
   }
 
-  send(){
-    print("押されました");
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title:Text(widget.room)),
+      appBar: AppBar(title: Text(widget.room)),
       body: Column(
-                children: [
-                  Expanded(
-                      child: ListView.builder(
-                  reverse: true,
-                  itemBuilder: (context,index){
-                  final item=items[index];
-                  return ListTile(
-                      subtitle: Text(item.name),
-                      title: Text(item.text),
-                      );
-                  },
-                  itemCount: items.length,)
-                  ),
-                  SafeArea(child:
-                  ListTile(
-                    title: TextField(
-                    ),
-                    trailing: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    iconColor: Colors.white,
-                    ),
-                    onPressed: send,
-                    icon: SvgPicture.asset('assets/send.svg',
-                    width: 20,
-                    height: 20),
+        children: [
+          Expanded(
+              child: ListView.builder(
+            reverse: true,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final isMe=item.name==widget.name;
+              return Padding(padding: isMe
+              ?EdgeInsets.only(left: 80,right: 16,top: 16)
+                  :EdgeInsets.only(left: 16,right: 80,top: 16),
+                child:  ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                  tileColor: isMe ? Colors.lightGreenAccent
+                      : Colors.black12,
+                  subtitle: Text(
+                      '${item.name} ${item.date.toString().replaceAll('-', '/').substring(0,16)}'),
+                  title: Text(item.text),
+                ),
+              );
 
-                    label: Text(
-                    '送信',
-                    style: TextStyle(
-                    color: Colors.white,
-                    fontWeight:FontWeight.bold,
-                    fontSize: 20
-                    ),
-                    ),
-                    ),
-                  ))
-
-
-                ],
+            },
+            itemCount: items.length,
+          )),
+          SafeArea(
+              child: ListTile(
+            title: TextField(
+              controller: textEditingController,
+            ),
+            trailing: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                iconColor: Colors.white,
               ),
+              onPressed: save,
+              icon: SvgPicture.asset('assets/send.svg', width: 20, height: 20),
+              label: Text(
+                '送信',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20),
+              ),
+            ),
+          ))
+        ],
+      ),
     );
-
   }
 
 }
 
-        class Item{
-        const Item({
-        required this.id,
-        required this.name,
-        required this.text,
-        });
+class Item {
+  const Item({
+    required this.id,
+    required this.date,
+    required this.name,
+    required this.text,
+  });
 
-        final String id;
-        final String name;
-        final String text;
+  final String id;
+  final DateTime date;
+  final String name;
+  final String text;
 
-        factory Item.fromSnapshot(String id, Map<String,dynamic> document){
-        return Item(
-        id: id,
-        name: document['name'].toString() ?? '',
-        text: document['text'].toString() ?? '',
-        );
-
-        }
-        }
-
-
-
+  factory Item.fromSnapshot(String id, Map<String, dynamic> document) {
+    return Item(
+      id: id,
+      date: (document['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      //「?」null許容型
+      //「?.」null条件演算子
+      //「??」null合体演算子
+      name: document['name'].toString() ?? '',
+      text: document['text'].toString() ?? '',
+    );
+  }
+}
